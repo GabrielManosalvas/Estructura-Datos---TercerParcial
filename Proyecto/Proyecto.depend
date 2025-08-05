@@ -529,7 +529,9 @@
 1754359707 source:c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\controller\controlador.cpp
 	"Controlador.hpp"
 
-1754360713 source:c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\view\vista.cpp
+1754361312 source:c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\view\vista.cpp
+	"Vista.hpp"
+	<SFML/System.hpp>
 	"Vista.hpp"
 	<SFML/System.hpp>
 
