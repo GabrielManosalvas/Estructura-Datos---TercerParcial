@@ -22,15 +22,32 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add directory="SFML/include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-static-libgcc -static-libstdc++ -static" />
+					<Add library="sfml-graphics-s" />
+					<Add library="sfml-window-s" />
+					<Add library="sfml-system-s" />
+					<Add library="opengl32" />
+					<Add library="freetype" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add directory="SFML/lib" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="Controller/Controller.cpp" />
+		<Unit filename="Controller/Controller.hpp" />
+		<Unit filename="Model/Modelo.cpp" />
+		<Unit filename="Model/Modelo.hpp" />
+		<Unit filename="View/Vista.cpp" />
+		<Unit filename="View/Vista.hpp" />
+		<Unit filename="main.cpp" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

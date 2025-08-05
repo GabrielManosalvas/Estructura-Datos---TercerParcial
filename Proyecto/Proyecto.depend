@@ -1,7 +1,6 @@
 # depslib dependency file v1.0
-1754103352 source:c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\main.cpp
-	<SFML/Graphics.hpp>
-	<optional>
+1754359402 source:c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\main.cpp
+	"../../Controller/Controlador.hpp"
 
 1733935265 c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\sfml\include\sfml\graphics.hpp
 	<SFML/Graphics/BlendMode.hpp>
@@ -511,4 +510,26 @@
 
 1734196663 c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\sfml\include\sfml\system\sleep.hpp
 	<SFML/System/Export.hpp>
+
+1754358879 source:c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\model\modelo.cpp
+	"Modelo.hpp"
+	<SFML/System.hpp>
+
+1754358864 c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\model\modelo.hpp
+
+1754359556 c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\controller\controlador.hpp
+	"../Model/Modelo.hpp"
+	"../View/Vista.hpp"
+	<SFML/Graphics.hpp>
+
+1754360699 c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\view\vista.hpp
+	<SFML/Graphics.hpp>
+	"../Model/Modelo.hpp"
+
+1754359707 source:c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\controller\controlador.cpp
+	"Controlador.hpp"
+
+1754360713 source:c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\view\vista.cpp
+	"Vista.hpp"
+	<SFML/System.hpp>
 
