@@ -22,6 +22,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-DSFML_STATIC" />
 					<Add directory="SFML/include" />
 				</Compiler>
 				<Linker>
@@ -41,8 +42,8 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="Controller/Controller.cpp" />
-		<Unit filename="Controller/Controller.hpp" />
+		<Unit filename="Controller/Controlador.cpp" />
+		<Unit filename="Controller/Controlador.hpp" />
 		<Unit filename="Model/Modelo.cpp" />
 		<Unit filename="Model/Modelo.hpp" />
 		<Unit filename="View/Vista.cpp" />

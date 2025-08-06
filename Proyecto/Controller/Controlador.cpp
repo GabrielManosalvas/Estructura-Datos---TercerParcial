@@ -108,13 +108,11 @@ void Controlador::mostrarSugerencia()
     Movimiento sugerencia = modelo->obtenerSugerencia();
 
     if (sugerencia.deX >= 0 && sugerencia.deY >= 0) {
-        // Resaltar la ficha sugerida por un momento
-        // Esto se podría implementar cambiando temporalmente el color de la ficha
-        // Por simplicidad, aquí solo mostramos que se puede mover esa ficha
+        // Mostrar visualmente la ficha que se debe mover
+        vista->mostrarSugerencia(sugerencia.deX, sugerencia.deY);
 
-        // En una implementación más completa, se podría:
-        // 1. Cambiar el color de la ficha sugerida
-        // 2. Mostrar una flecha indicando la dirección
-        // 3. Usar un timer para volver al color original
+        // La vista manejará el resaltado de la ficha sugerida
+        // con un efecto visual temporal (parpadeo dorado)
+        // durante 2 segundos como se implementó en Vista.cpp
     }
 }

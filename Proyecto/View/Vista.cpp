@@ -1,23 +1,64 @@
 #include "Vista.hpp"
 #include <SFML/System.hpp>
 
-
-#include "Vista.hpp"
-#include <SFML/System.hpp>
-
 Vista::Vista() : mostrandoMenuDificultad(true), juegoIniciado(false),
                  jugadorActual(1), movimientosJugador1(0), movimientosJugador2(0),
                  puntajeJugador1(0), puntajeJugador2(0), juegoTerminado(false),
-                 animandoMovimiento(false), duracionAnimacion(0.3f)
+                 animandoMovimiento(false), duracionAnimacion(0.3f),
+                 mostrandoSugerencia(false), fichaResaltada(-1, -1),
+                 fichaSugerida(-1, -1), fuenteCargada(false)
 {
-    ventana = new sf::RenderWindow(sf::VideoMode({800u, 600u}), "8-Puzzle");
+    ventana = new sf::RenderWindow(sf::VideoMode({900u, 700u}), "8-Puzzle - Rompecabezas Recursivo");
     ventana->setFramerateLimit(60);
+
+    // Intentar cargar fuente del sistema
+    fuenteCargada = fuente.openFromFile("C:/Windows/Fonts/arial.ttf") ||
+                    fuente.openFromFile("/System/Library/Fonts/Helvetica.ttc") ||
+                    fuente.openFromFile("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf");
+
+    // Inicializar punteros de texto
+    textoTitulo = nullptr;
+    textoSubtitulo = nullptr;
+    textoTurno = nullptr;
+    textoInfoJ1 = nullptr;
+    textoInfoJ2 = nullptr;
+    textoInstrucciones = nullptr;
+    textoPuntaje = nullptr;
+    textoNivel = nullptr;
+    textoBotonSugerencia = nullptr;
+    textoBotonReiniciar = nullptr;
+
+    for (int i = 0; i < 3; i++) {
+        textosDificultad[i] = nullptr;
+        for (int j = 0; j < 3; j++) {
+            numerosTexto[i][j] = nullptr;
+        }
+    }
 
     configurarElementosUI();
 }
 
 Vista::~Vista()
 {
+    // Liberar textos
+    delete textoTitulo;
+    delete textoSubtitulo;
+    delete textoTurno;
+    delete textoInfoJ1;
+    delete textoInfoJ2;
+    delete textoInstrucciones;
+    delete textoPuntaje;
+    delete textoNivel;
+    delete textoBotonSugerencia;
+    delete textoBotonReiniciar;
+
+    for (int i = 0; i < 3; i++) {
+        delete textosDificultad[i];
+        for (int j = 0; j < 3; j++) {
+            delete numerosTexto[i][j];
+        }
+    }
+
     delete ventana;
 }
 
@@ -25,14 +66,15 @@ void Vista::configurarElementosUI()
 {
     crearFichas();
     crearBotones();
+    crearTextos();
 }
 
 void Vista::crearFichas()
 {
-    float tamanoFicha = 80.0f;
+    float tamanoFicha = 100.0f;
     float espaciado = 5.0f;
-    float inicioX = 350.0f;
-    float inicioY = 200.0f;
+    float inicioX = 400.0f;
+    float inicioY = 250.0f;
 
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
@@ -40,65 +82,139 @@ void Vista::crearFichas()
             fichas[i][j].setSize({tamanoFicha, tamanoFicha});
             fichas[i][j].setPosition({inicioX + j * (tamanoFicha + espaciado),
                                      inicioY + i * (tamanoFicha + espaciado)});
-            fichas[i][j].setFillColor(sf::Color::Cyan);
+            fichas[i][j].setFillColor(sf::Color(220, 220, 255));
             fichas[i][j].setOutlineThickness(3);
-            fichas[i][j].setOutlineColor(sf::Color::Black);
+            fichas[i][j].setOutlineColor(sf::Color(50, 50, 150));
 
-            // Usar círculos de colores para representar números
-            numerosVisuales[i][j].setRadius(25.0f);
-            numerosVisuales[i][j].setPosition({inicioX + j * (tamanoFicha + espaciado) + 15,
-                                              inicioY + i * (tamanoFicha + espaciado) + 15});
-            numerosVisuales[i][j].setOutlineThickness(2);
-            numerosVisuales[i][j].setOutlineColor(sf::Color::Black);
+            // Crear texto para números si la fuente se cargó
+            if (fuenteCargada) {
+                numerosTexto[i][j] = new sf::Text(fuente, "", 48);
+                numerosTexto[i][j]->setFillColor(sf::Color::Black);
+                numerosTexto[i][j]->setStyle(sf::Text::Bold);
+
+                float textoX = inicioX + j * (tamanoFicha + espaciado) + tamanoFicha/2 - 15;
+                float textoY = inicioY + i * (tamanoFicha + espaciado) + tamanoFicha/2 - 30;
+                numerosTexto[i][j]->setPosition({textoX, textoY});
+            }
         }
     }
+
+    // Configurar el resaltado de sugerencia
+    resaltadoSugerencia.setSize({tamanoFicha + 10, tamanoFicha + 10});
+    resaltadoSugerencia.setFillColor(sf::Color::Transparent);
+    resaltadoSugerencia.setOutlineThickness(5);
+    resaltadoSugerencia.setOutlineColor(sf::Color(255, 215, 0));
 }
 
 void Vista::crearBotones()
 {
     // Botón de sugerencia
-    botonSugerencia.setSize({120.0f, 35.0f});
-    botonSugerencia.setPosition({50.0f, 450.0f});
-    botonSugerencia.setFillColor(sf::Color::Green);
+    botonSugerencia.setSize({140.0f, 45.0f});
+    botonSugerencia.setPosition({50.0f, 500.0f});
+    botonSugerencia.setFillColor(sf::Color(100, 200, 100));
     botonSugerencia.setOutlineThickness(2);
     botonSugerencia.setOutlineColor(sf::Color::Black);
 
     // Botón de reiniciar
-    botonReiniciar.setSize({120.0f, 35.0f});
-    botonReiniciar.setPosition({200.0f, 450.0f});
-    botonReiniciar.setFillColor(sf::Color::Yellow);
+    botonReiniciar.setSize({140.0f, 45.0f});
+    botonReiniciar.setPosition({210.0f, 500.0f});
+    botonReiniciar.setFillColor(sf::Color(255, 180, 0));
     botonReiniciar.setOutlineThickness(2);
     botonReiniciar.setOutlineColor(sf::Color::Black);
 
-    // Botones de dificultad - usar diferentes colores para identificarlos
+    // Botones de dificultad
     for (int i = 0; i < 3; i++) {
-        botonesDificultad[i].setSize({100.0f, 60.0f});
-        botonesDificultad[i].setPosition({300.0f + i * 120.0f, 300.0f});
+        botonesDificultad[i].setSize({150.0f, 80.0f});
+        botonesDificultad[i].setPosition({225.0f + i * 170.0f, 350.0f});
 
-        // Colores diferentes para cada dificultad
-        if (i == 0) botonesDificultad[i].setFillColor(sf::Color::Green);      // Fácil
-        else if (i == 1) botonesDificultad[i].setFillColor(sf::Color::Blue); // Medio
-        else botonesDificultad[i].setFillColor(sf::Color::Red);              // Difícil
+        if (i == 0) botonesDificultad[i].setFillColor(sf::Color(100, 200, 100));
+        else if (i == 1) botonesDificultad[i].setFillColor(sf::Color(100, 150, 255));
+        else botonesDificultad[i].setFillColor(sf::Color(255, 100, 100));
 
         botonesDificultad[i].setOutlineThickness(3);
         botonesDificultad[i].setOutlineColor(sf::Color::Black);
     }
 }
 
-sf::Color Vista::obtenerColorNumero(int numero)
+void Vista::crearTextos()
 {
-    // Asignar colores únicos a cada número
-    switch (numero) {
-        case 1: return sf::Color::Red;
-        case 2: return sf::Color::Blue;
-        case 3: return sf::Color::Green;
-        case 4: return sf::Color::Yellow;
-        case 5: return sf::Color::Magenta;
-        case 6: return sf::Color::Cyan;
-        case 7: return sf::Color(255, 165, 0); // Naranja
-        case 8: return sf::Color(128, 0, 128); // Púrpura
-        default: return sf::Color::Transparent;
+    if (!fuenteCargada) return;
+
+    // Título del juego
+    textoTitulo = new sf::Text(fuente, "8-PUZZLE", 48);
+    textoTitulo->setFillColor(sf::Color(50, 50, 150));
+    textoTitulo->setStyle(sf::Text::Bold);
+    textoTitulo->setPosition({350.0f, 30.0f});
+
+    // Subtítulo
+    textoSubtitulo = new sf::Text(fuente, "Rompecabezas Recursivo", 24);
+    textoSubtitulo->setFillColor(sf::Color(100, 100, 100));
+    textoSubtitulo->setPosition({320.0f, 85.0f});
+
+    // Texto de turno
+    textoTurno = new sf::Text(fuente, "", 22);
+    textoTurno->setFillColor(sf::Color::Black);
+    textoTurno->setPosition({50.0f, 200.0f});
+
+    // Textos de información
+    textoInfoJ1 = new sf::Text(fuente, "", 18);
+    textoInfoJ1->setFillColor(sf::Color(200, 0, 0));
+    textoInfoJ1->setPosition({50.0f, 250.0f});
+
+    textoInfoJ2 = new sf::Text(fuente, "", 18);
+    textoInfoJ2->setFillColor(sf::Color(0, 0, 200));
+    textoInfoJ2->setPosition({50.0f, 280.0f});
+
+    // Instrucciones
+    textoInstrucciones = new sf::Text(fuente, "Mueve las fichas para ordenar del 1 al 8", 16);
+    textoInstrucciones->setFillColor(sf::Color(80, 80, 80));
+    textoInstrucciones->setPosition({380.0f, 600.0f});
+
+    // Puntaje
+    textoPuntaje = new sf::Text(fuente, "", 18);
+    textoPuntaje->setFillColor(sf::Color::Black);
+    textoPuntaje->setPosition({50.0f, 350.0f});
+
+    // Nivel
+    textoNivel = new sf::Text(fuente, "", 20);
+    textoNivel->setFillColor(sf::Color(100, 100, 100));
+    textoNivel->setPosition({400.0f, 200.0f});
+
+    // Textos de botones
+    textoBotonSugerencia = new sf::Text(fuente, "Sugerencia", 18);
+    textoBotonSugerencia->setFillColor(sf::Color::White);
+    textoBotonSugerencia->setPosition({70.0f, 510.0f});
+
+    textoBotonReiniciar = new sf::Text(fuente, "Reiniciar", 18);
+    textoBotonReiniciar->setFillColor(sf::Color::White);
+    textoBotonReiniciar->setPosition({235.0f, 510.0f});
+
+    // Textos de dificultad
+    sf::String nombresDificultad[3] = {"FACIL", "MEDIO", "DIFICIL"};
+    for (int i = 0; i < 3; i++) {
+        textosDificultad[i] = new sf::Text(fuente, nombresDificultad[i], 24);
+        textosDificultad[i]->setFillColor(sf::Color::White);
+        textosDificultad[i]->setStyle(sf::Text::Bold);
+        textosDificultad[i]->setPosition({250.0f + i * 170.0f, 375.0f});
     }
+}
+
+sf::String Vista::intToString(int valor)
+{
+    if (valor == 0) return "0";
+
+    sf::String resultado = "";
+    bool negativo = valor < 0;
+    if (negativo) valor = -valor;
+
+    while (valor > 0) {
+        char digito = '0' + (valor % 10);
+        resultado = digito + resultado;
+        valor /= 10;
+    }
+
+    if (negativo) resultado = "-" + resultado;
+    return resultado;
 }
 
 bool Vista::estaAbierta()
@@ -113,10 +229,7 @@ void Vista::cerrar()
 
 std::optional<sf::Event> Vista::pollEvent()
 {
-    if (auto evento = ventana->pollEvent()) {
-        return evento;
-    }
-    return std::nullopt;
+    return ventana->pollEvent();
 }
 
 void Vista::manejarEventos(sf::Event& evento)
@@ -128,11 +241,9 @@ void Vista::manejarEventos(sf::Event& evento)
 
 void Vista::actualizar(const Modelo& modelo)
 {
-    if (!juegoIniciado) {
-        return;
-    }
+    if (!juegoIniciado) return;
 
-    // Guardar estado del modelo para usar en renderizar()
+    // Guardar estado del modelo
     jugadorActual = modelo.obtenerJugadorActual();
     movimientosJugador1 = modelo.obtenerMovimientosJugador1();
     movimientosJugador2 = modelo.obtenerMovimientosJugador2();
@@ -140,164 +251,208 @@ void Vista::actualizar(const Modelo& modelo)
     puntajeJugador2 = modelo.obtenerPuntajeJugador2();
     juegoTerminado = modelo.obtenerJuegoTerminado();
 
-    // Actualizar estado del tablero
+    // Actualizar textos si la fuente está cargada
+    if (fuenteCargada) {
+        textoTurno->setString("Turno: Jugador " + intToString(jugadorActual));
+        textoInfoJ1->setString("Jugador 1 - Movimientos: " + intToString(movimientosJugador1));
+        textoInfoJ2->setString("Jugador 2 - Movimientos: " + intToString(movimientosJugador2));
+
+        sf::String nivelTexto = "Nivel: ";
+        int nivel = modelo.obtenerNivelDificultad();
+        if (nivel == 1) nivelTexto += "Facil";
+        else if (nivel == 2) nivelTexto += "Medio";
+        else nivelTexto += "Dificil";
+        textoNivel->setString(nivelTexto);
+
+        textoPuntaje->setString("Puntaje estimado:\nJ1: " +
+                               intToString(1000 - 5 * movimientosJugador1) +
+                               "\nJ2: " +
+                               intToString(1000 - 5 * movimientosJugador2));
+    }
+
+    // Actualizar tablero
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             int valor = modelo.obtenerValor(i, j);
             if (valor == 0) {
-                // Espacio vacío - casilla gris oscuro sin círculo
-                fichas[i][j].setFillColor(sf::Color(80, 80, 80));
-                numerosVisuales[i][j].setFillColor(sf::Color::Transparent);
-                numerosVisuales[i][j].setOutlineColor(sf::Color::Transparent);
+                fichas[i][j].setFillColor(sf::Color(100, 100, 100));
+                if (fuenteCargada && numerosTexto[i][j]) {
+                    numerosTexto[i][j]->setString("");
+                }
             } else {
-                // Ficha con número - casilla cian con círculo de color
-                fichas[i][j].setFillColor(sf::Color::Cyan);
-                numerosVisuales[i][j].setFillColor(obtenerColorNumero(valor));
-                numerosVisuales[i][j].setOutlineColor(sf::Color::Black);
+                fichas[i][j].setFillColor(sf::Color(220, 220, 255));
+                if (fuenteCargada && numerosTexto[i][j]) {
+                    numerosTexto[i][j]->setString(intToString(valor));
+                }
             }
         }
     }
 
-    // Actualizar animación
+    // Actualizar animaciones
     if (animandoMovimiento) {
         float tiempoTranscurrido = relojAnimacion.getElapsedTime().asSeconds();
         if (tiempoTranscurrido >= duracionAnimacion) {
             animandoMovimiento = false;
         }
     }
+
+    if (mostrandoSugerencia) {
+        float tiempo = relojSugerencia.getElapsedTime().asSeconds();
+        if (tiempo >= 2.0f) {
+            mostrandoSugerencia = false;
+        }
+    }
 }
 
 void Vista::renderizar()
 {
-    ventana->clear(sf::Color::White);
+    ventana->clear(sf::Color(245, 245, 245));
 
     if (mostrandoMenuDificultad) {
         // Renderizar menú de dificultad
-        // Título visual
-        sf::RectangleShape titulo;
-        titulo.setSize({400.0f, 80.0f});
-        titulo.setPosition({200.0f, 100.0f});
-        titulo.setFillColor(sf::Color(200, 200, 255));
-        titulo.setOutlineThickness(3);
-        titulo.setOutlineColor(sf::Color::Black);
-        ventana->draw(titulo);
+        if (fuenteCargada) {
+            ventana->draw(*textoTitulo);
+            ventana->draw(*textoSubtitulo);
 
-        // Instrucciones
-        sf::RectangleShape instruccion;
-        instruccion.setSize({400.0f, 40.0f});
-        instruccion.setPosition({200.0f, 200.0f});
-        instruccion.setFillColor(sf::Color(255, 255, 200));
-        instruccion.setOutlineThickness(2);
-        instruccion.setOutlineColor(sf::Color::Black);
-        ventana->draw(instruccion);
+            sf::Text instruccionMenu(fuente, "Selecciona el nivel de dificultad:", 24);
+            instruccionMenu.setFillColor(sf::Color::Black);
+            instruccionMenu.setPosition({270.0f, 280.0f});
+            ventana->draw(instruccionMenu);
+        }
 
         // Botones de dificultad
         for (int i = 0; i < 3; i++) {
             ventana->draw(botonesDificultad[i]);
+            if (fuenteCargada && textosDificultad[i]) {
+                ventana->draw(*textosDificultad[i]);
+            }
 
-            // Pequeños indicadores numéricos
-            sf::CircleShape numero(10.0f);
-            numero.setPosition({340.0f + i * 120.0f, 320.0f});
-            numero.setFillColor(sf::Color::White);
-            numero.setOutlineThickness(2);
-            numero.setOutlineColor(sf::Color::Black);
-            ventana->draw(numero);
+            // Descripción de cada nivel
+            if (fuenteCargada) {
+                sf::Text descripcion(fuente, "", 14);
+                descripcion.setFillColor(sf::Color(100, 100, 100));
+
+                if (i == 0) descripcion.setString("5 movimientos");
+                else if (i == 1) descripcion.setString("15 movimientos");
+                else descripcion.setString("30 movimientos");
+
+                descripcion.setPosition({245.0f + i * 170.0f, 410.0f});
+                ventana->draw(descripcion);
+            }
         }
 
     } else if (juegoIniciado) {
         // Renderizar juego
-        // Dibujar tablero
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                ventana->draw(fichas[i][j]);
-                // Solo dibujar círculo si no es transparente
-                if (numerosVisuales[i][j].getFillColor() != sf::Color::Transparent) {
-                    ventana->draw(numerosVisuales[i][j]);
-                }
-            }
+        if (fuenteCargada) {
+            ventana->draw(*textoTitulo);
+            ventana->draw(*textoNivel);
+            ventana->draw(*textoTurno);
+            ventana->draw(*textoInfoJ1);
+            ventana->draw(*textoInfoJ2);
+            ventana->draw(*textoPuntaje);
+            ventana->draw(*textoInstrucciones);
         }
 
-        // Panel de información mejorado
-        sf::RectangleShape infoPanel;
-        infoPanel.setSize({250.0f, 150.0f});
-        infoPanel.setPosition({30.0f, 30.0f});
-        infoPanel.setFillColor(sf::Color(240, 240, 240));
-        infoPanel.setOutlineThickness(2);
-        infoPanel.setOutlineColor(sf::Color::Black);
-        ventana->draw(infoPanel);
+        // Panel de información
+        sf::RectangleShape panelInfo;
+        panelInfo.setSize({300.0f, 200.0f});
+        panelInfo.setPosition({30.0f, 180.0f});
+        panelInfo.setFillColor(sf::Color(240, 240, 250));
+        panelInfo.setOutlineThickness(2);
+        panelInfo.setOutlineColor(sf::Color(150, 150, 200));
+        ventana->draw(panelInfo);
 
-        // Indicador de jugador actual más visible
-        sf::CircleShape indicadorJugador(20.0f);
-        indicadorJugador.setPosition({50.0f, 50.0f});
+        // Indicador visual del jugador actual
+        sf::CircleShape indicadorJugador(15.0f);
+        indicadorJugador.setPosition({50.0f, 230.0f});
         if (jugadorActual == 1) {
             indicadorJugador.setFillColor(sf::Color::Red);
         } else {
             indicadorJugador.setFillColor(sf::Color::Blue);
         }
-        indicadorJugador.setOutlineThickness(3);
+        indicadorJugador.setOutlineThickness(2);
         indicadorJugador.setOutlineColor(sf::Color::Black);
         ventana->draw(indicadorJugador);
 
-        // Etiquetas para jugadores
-        sf::RectangleShape etiquetaJ1({30.0f, 15.0f});
-        etiquetaJ1.setPosition({100.0f, 60.0f});
-        etiquetaJ1.setFillColor(sf::Color::Red);
-        ventana->draw(etiquetaJ1);
+        // Dibujar tablero
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                ventana->draw(fichas[i][j]);
+                if (fuenteCargada && numerosTexto[i][j]) {
+                    ventana->draw(*numerosTexto[i][j]);
+                }
+            }
+        }
 
-        sf::RectangleShape etiquetaJ2({30.0f, 15.0f});
-        etiquetaJ2.setPosition({140.0f, 60.0f});
-        etiquetaJ2.setFillColor(sf::Color::Blue);
-        ventana->draw(etiquetaJ2);
+        // Mostrar resaltado de sugerencia
+        if (mostrandoSugerencia && fichaSugerida.x >= 0) {
+            float tamanoFicha = 100.0f;
+            float espaciado = 5.0f;
+            float inicioX = 400.0f;
+            float inicioY = 250.0f;
 
-        // Contadores de movimientos mejorados
-        float maxAlto = 80.0f;
-        float factorEscala = 3.0f;
+            resaltadoSugerencia.setPosition({
+                inicioX + fichaSugerida.y * (tamanoFicha + espaciado) - 5,
+                inicioY + fichaSugerida.x * (tamanoFicha + espaciado) - 5
+            });
 
-        float altoBarraJ1 = (movimientosJugador1 * factorEscala > maxAlto) ? maxAlto : movimientosJugador1 * factorEscala;
-        float altoBarraJ2 = (movimientosJugador2 * factorEscala > maxAlto) ? maxAlto : movimientosJugador2 * factorEscala;
-
-        sf::RectangleShape barraJ1({25.0f, altoBarraJ1});
-        barraJ1.setPosition({105.0f, 160.0f - altoBarraJ1});
-        barraJ1.setFillColor(sf::Color::Red);
-        barraJ1.setOutlineThickness(1);
-        barraJ1.setOutlineColor(sf::Color::Black);
-        ventana->draw(barraJ1);
-
-        sf::RectangleShape barraJ2({25.0f, altoBarraJ2});
-        barraJ2.setPosition({140.0f, 160.0f - altoBarraJ2});
-        barraJ2.setFillColor(sf::Color::Blue);
-        barraJ2.setOutlineThickness(1);
-        barraJ2.setOutlineColor(sf::Color::Black);
-        ventana->draw(barraJ2);
+            float tiempo = relojSugerencia.getElapsedTime().asSeconds();
+            // Efecto parpadeo simple sin usar sin()
+            int ciclos = (int)(tiempo * 4); // 4 parpadeos por segundo
+            int alpha = (ciclos % 2 == 0) ? 255 : 100; // Alterna entre brillante y tenue
+            resaltadoSugerencia.setOutlineColor(sf::Color(255, 215, 0, alpha));
+            ventana->draw(resaltadoSugerencia);
+        }
 
         // Dibujar botones
         ventana->draw(botonSugerencia);
         ventana->draw(botonReiniciar);
+        if (fuenteCargada) {
+            ventana->draw(*textoBotonSugerencia);
+            ventana->draw(*textoBotonReiniciar);
+        }
 
-        // Indicador de victoria mejorado
+        // Panel de victoria
         if (juegoTerminado) {
             sf::RectangleShape panelVictoria;
-            panelVictoria.setSize({300.0f, 100.0f});
-            panelVictoria.setPosition({250.0f, 50.0f});
-            panelVictoria.setFillColor(sf::Color::Yellow);
+            panelVictoria.setSize({400.0f, 200.0f});
+            panelVictoria.setPosition({250.0f, 150.0f});
+            panelVictoria.setFillColor(sf::Color(255, 255, 200, 240));
             panelVictoria.setOutlineThickness(5);
-            panelVictoria.setOutlineColor(sf::Color::Red);
+            panelVictoria.setOutlineColor(sf::Color(255, 215, 0));
             ventana->draw(panelVictoria);
 
-            // Mostrar ganador con color más grande
-            sf::CircleShape ganador(35.0f);
-            ganador.setPosition({380.0f, 75.0f});
-            ganador.setOutlineThickness(4);
-            ganador.setOutlineColor(sf::Color::Black);
+            if (fuenteCargada) {
+                sf::Text textoVictoria(fuente, "", 32);
+                textoVictoria.setStyle(sf::Text::Bold);
 
-            if (puntajeJugador1 > puntajeJugador2) {
-                ganador.setFillColor(sf::Color::Red);  // Jugador 1
-            } else if (puntajeJugador2 > puntajeJugador1) {
-                ganador.setFillColor(sf::Color::Blue); // Jugador 2
-            } else {
-                ganador.setFillColor(sf::Color::Green); // Empate
+                sf::String ganador;
+                if (puntajeJugador1 > puntajeJugador2) {
+                    ganador = "Jugador 1 Gana!";
+                    textoVictoria.setFillColor(sf::Color(200, 0, 0));
+                } else if (puntajeJugador2 > puntajeJugador1) {
+                    ganador = "Jugador 2 Gana!";
+                    textoVictoria.setFillColor(sf::Color(0, 0, 200));
+                } else {
+                    ganador = "Empate!";
+                    textoVictoria.setFillColor(sf::Color(100, 100, 100));
+                }
+
+                textoVictoria.setString(ganador);
+                textoVictoria.setPosition({330.0f, 180.0f});
+                ventana->draw(textoVictoria);
+
+                sf::Text textosPuntajesFinal(fuente, "", 20);
+                textosPuntajesFinal.setFillColor(sf::Color::Black);
+                textosPuntajesFinal.setString(
+                    "Jugador 1: " + intToString(puntajeJugador1) + " puntos\n" +
+                    "Jugador 2: " + intToString(puntajeJugador2) + " puntos\n\n" +
+                    "Movimientos J1: " + intToString(movimientosJugador1) + "\n" +
+                    "Movimientos J2: " + intToString(movimientosJugador2)
+                );
+                textosPuntajesFinal.setPosition({300.0f, 230.0f});
+                ventana->draw(textosPuntajesFinal);
             }
-            ventana->draw(ganador);
         }
     }
 
@@ -311,6 +466,13 @@ void Vista::iniciarAnimacionMovimiento(int fichaX, int fichaY, int vaciaX, int v
     posicionAnimacionInicio = Posicion(fichaX, fichaY);
     posicionAnimacionFin = Posicion(vaciaX, vaciaY);
     fichaAnimada = fichaX * 3 + fichaY;
+}
+
+void Vista::mostrarSugerencia(int x, int y)
+{
+    mostrandoSugerencia = true;
+    fichaSugerida = Posicion(x, y);
+    relojSugerencia.restart();
 }
 
 sf::Vector2f Vista::interpolarPosicion(sf::Vector2f inicio, sf::Vector2f fin, float progreso)
@@ -348,10 +510,10 @@ int Vista::clicEnBotonDificultad(sf::Vector2i posicionMouse)
     for (int i = 0; i < 3; i++) {
         sf::FloatRect limiteBoton = botonesDificultad[i].getGlobalBounds();
         if (limiteBoton.contains(sf::Vector2f(posicionMouse))) {
-            return i + 1; // Retorna 1, 2, o 3
+            return i + 1;
         }
     }
-    return 0; // No se hizo clic en ningún botón
+    return 0;
 }
 
 bool Vista::obtenerMostrandoMenuDificultad() const

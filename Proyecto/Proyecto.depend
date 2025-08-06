@@ -522,16 +522,14 @@
 	"../View/Vista.hpp"
 	<SFML/Graphics.hpp>
 
-1754360699 c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\view\vista.hpp
+1754440382 c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\view\vista.hpp
 	<SFML/Graphics.hpp>
 	"../Model/Modelo.hpp"
 
-1754359707 source:c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\controller\controlador.cpp
+1754439570 source:c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\controller\controlador.cpp
 	"Controlador.hpp"
 
-1754361312 source:c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\view\vista.cpp
-	"Vista.hpp"
-	<SFML/System.hpp>
-	"Vista.hpp"
-	<SFML/System.hpp>
+1754439941 source:c:\users\gabriel\desktop\estructuradatos\tercerparcial\proyecto\estructura-datos---tercerparcial\proyecto\view\vista.cpp
+	<SFML/Graphics.hpp>
+	"../Model/Modelo.hpp"
 
